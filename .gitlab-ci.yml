@@ -1,0 +1,130 @@
+stages:
+  - prepare
+  - test
+  - build
+  - release
+  - deploy
+  - security
+
+image: node:dubnium-alpine
+
+cache:
+  key: $CI_COMMIT_REF_SLUG
+  paths:
+    - node_modules/
+
+before_script:
+  - yarn install --frozen-lockfile
+
+install:yarn:
+  stage: prepare
+  script:
+    - yarn install --frozen-lockfile
+    # - cp .env.example .env
+  artifacts:
+    paths:
+      - node_modules/
+      - .env
+    expire_in: 1 days
+    when: always
+  cache:
+    paths:
+      - node_modules/
+
+code_quality:eslint:
+  stage: test
+  script:
+    - yarn eslint --format gitlab --ext .js,.vue --ignore-path .gitignore .
+  artifacts:
+    reports:
+      codequality: gl-codequality.json
+    paths:
+      - gl-codequality.json
+  cache:
+    policy: pull
+    paths:
+      - node_modules/
+  dependencies:
+    - install:yarn
+  needs:
+    - install:yarn
+  allow_failure: true
+
+# code_quality:stylelint:
+#   stage: test
+#   script:
+#     - yarn stylelint 'assets/**/*.{s?(a|c)ss,less,stylus}' --custom-formatter=node_modules/stylelint-formatter-gitlab
+#   artifacts:
+#     reports:
+#       codequality: gl-codequality.json
+#     paths:
+#       - gl-codequality.json
+#     when: always
+#   cache:
+#     policy: pull
+#     paths:
+#       - node_modules/
+#   dependencies:
+#     - install:yarn
+#   needs:
+#     - install:yarn
+#   allow_failure: true
+
+license_management:
+  stage: test
+  script:
+    - npx license-checker --json | npx gitlab-ci-license-checker-parser -o gl-license-management-report.json
+  artifacts:
+    reports:
+      license_management: gl-license-management-report.json
+  cache:
+    policy: pull
+    paths:
+      - node_modules/
+  dependencies:
+    - install:yarn
+  needs:
+    - install:yarn
+  allow_failure: true
+
+dependency_scanning:
+  stage: security
+  script:
+    - yarn audit --json | yarn gitlab-ci-yarn-audit-parser -o gl-dependency-scanning.json
+  artifacts:
+    reports:
+      dependency_scanning: gl-dependency-scanning.json
+    paths:
+      - gl-dependency-scanning.json
+    when: always
+  cache:
+    policy: pull
+    paths:
+      - node_modules/
+  dependencies:
+    - install:yarn
+  needs:
+    - install:yarn
+  allow_failure: true
+
+pages:
+  stage: deploy
+  script:
+    - yarn build --target static
+    - yarn export
+  artifacts:
+    paths:
+      - public
+  only:
+    - develop@mirea/ctf.explabs.ru
+    - master@explabs/university/ctf.explabs.ru
+
+netlify:
+  stage: deploy
+  script:
+    - yarn build --target static
+    - yarn export
+    - yarn netlify deploy --site $NETLIFY_SITE_ID --auth $NETLIFY_AUTH_TOKEN --prod
+  only:
+    - develop@mirea/ctf.explabs.ru
+    - master@mirea/ctf.explabs.ru

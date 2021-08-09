@@ -1,0 +1,74 @@
+@import "~bootstrap/scss/functions";
+@import "~bootstrap/scss/variables";
+@import "~bootstrap/scss/mixins";
+@import "node_modules/slick-carousel/slick/slick.css";
+
+
+$white: #ffffff;
+$light: #f8f9fa;
+$dark: #343a40;
+
+html{
+  scroll-behavior: smooth;
+}
+
+.content {
+  padding-top: 56px;
+}
+
+.triangle {
+  width: 0;
+  height: 0;
+  border-style: solid;
+  display: block;
+  position: absolute;
+  left: 50%;
+  -webkit-transform: translateX(-50%);
+  -moz-transform: translateX(-50%);
+  -ms-transform: translateX(-50%);
+  -o-transform: translateX(-50%);
+  transform: translateX(-50%);
+  z-index: 100;
+
+  --border-color: $white;
+
+  &--bottom {
+    border-width: 185px 0 0 2560px;
+    bottom: 0;
+    border-color: transparent transparent transparent $white;
+  }
+
+  &--top {
+    border-width: 0 2560px 185px 0;
+    top: 0;
+    border-color: transparent $white transparent transparent;
+  }
+}
+
+ul.fa-ul {
+  li {
+    margin: 3px 0;
+  }
+}
+
+.shade {
+  position: absolute;
+  min-width: 100%;
+  min-height: 100%;
+  top: 0;
+  bottom: 0;
+
+  &--dark {
+    background-color: rgba($dark, 0.3);
+  }
+
+  &--light {
+    background-color: rgba($light, 0.3);
+  }
+}
+
+@include media-breakpoint-down(sm) {
+  .display-4 {
+    font-size: 2.5rem;
+  }
+}
